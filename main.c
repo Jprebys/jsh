@@ -3,6 +3,7 @@
 #include <stdlib.h>
 
 #define MAX_LINE_LENGTH 128
+#define EXIT_STR "exit\n"
 
 char *get_stdin_line()
 {
@@ -28,7 +29,7 @@ void jsh_main_loop_run()
 	do {
 		line = get_stdin_line();
 		printf("%s", line);
-	} while (strcmp(line, "exit\n"));
+	} while (strncmp(line, EXIT_STR, strlen(EXIT_STR)));
 	printf("Exiting...\n");
 }
 
