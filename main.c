@@ -2,8 +2,10 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define MAX_LINE_LENGTH 128
+#define MAX_LINE_LENGTH 256
+#define MAX_TOKENS 128
 #define EXIT_STR "exit\n"
+#define JSH_DELIMITER " \n"
 
 char *get_stdin_line()
 {
@@ -22,13 +24,44 @@ char *get_stdin_line()
 
 }
 
+char **split_line(char *line)
+{
+	char *token;
+	char **result = malloc(MAX_TOKENS * sizeof(char*));
+	if (result == NULL) {
+		perror("Split line malloc");
+		exit(1);
+	}
+
+	size_t count = 0;
+	token = strtok(line, JSH_DELIMITER);
+	while(token != NULL) {
+		result[count++] = token;
+		if (count == MAX_TOKENS) {
+			fprintf(stderr, "ERROR: Too many tokens\n");
+			exit(1);
+		}
+		token = strtok(NULL, JSH_DELIMITER);
+	}
+	result[count] = NULL;
+
+	return result;
+}
+
 
 void jsh_main_loop_run()
 {
-	char *line;
+	char *line, **tokens;
 	do {
 		line = get_stdin_line();
-		printf("%s", line);
+		tokens = split_line(line);
+
+		printf("Tokens: ");
+		for (size_t i = 0; tokens[i] != NULL; ++i) {
+			printf("[%s]", tokens[i]);
+		}
+		printf("\n");
+		
 	} while (strncmp(line, EXIT_STR, strlen(EXIT_STR)));
 	printf("Exiting...\n");
 }
