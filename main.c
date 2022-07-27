@@ -1,27 +1,42 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <readline/readline.h>
+#include <sys/wait.h>
 
 #define MAX_LINE_LENGTH 256
 #define MAX_TOKENS 128
-#define EXIT_STR "exit\n"
-#define JSH_DELIMITER " \n"
+#define EXIT_STR "exit"
+#define JSH_DELIMITER " "
+#define JSH_PROMPT ">>"
+#define BIN_DIR "/usr/bin"
+#define JOIN_CHAR "/"
+#define JOIN_CHAR_LEN (sizeof(JOIN_CHAR) - 1)
+
+
+char* join_paths(char* base, char* fname) 
+{
+	size_t base_size = strlen(base);
+	size_t fname_size = strlen(fname);
+	char* begin = malloc(base_size + JOIN_CHAR_LEN + fname_size + 1);
+	char* end = begin;
+	memcpy(end, base, base_size);
+	end += base_size;
+	memcpy(end, JOIN_CHAR, JOIN_CHAR_LEN);
+	end += JOIN_CHAR_LEN;
+	memcpy(end, fname, fname_size);
+	end += fname_size;
+	*end = '\0';
+
+	return begin;
+}
+
 
 char *get_stdin_line()
 {
-	char *buffer = NULL;
-	size_t n = 0;
-
-	if (getline(&buffer, &n, stdin) == -1) {
-		if (feof(stdin))
-			return buffer;
-		else {
-			perror("Error using getline");
-			exit(1);
-		}
-	}
-	return buffer;
-
+	char *prompt = JSH_PROMPT;
+	return readline(prompt);
 }
 
 char **split_line(char *line)
@@ -48,6 +63,31 @@ char **split_line(char *line)
 	return result;
 }
 
+void start_process(char **tokens) {
+	pid_t pid = fork();
+	switch (pid) {
+		case -1:    // error
+			perror("Fork");
+			exit(1);
+		case  0:    // child
+			char *f_path = join_paths(BIN_DIR, tokens[0]);
+			int result = execve(f_path, tokens, NULL);
+			free(f_path);
+			if (result == -1) {
+				perror(tokens[0]);
+				exit(1);
+			} else
+				exit(0);
+		default:    // parent
+			int *status = malloc(sizeof(int));
+			waitpid(pid, status, 0);
+			if (WIFEXITED(*status) && (WEXITSTATUS(*status))) {
+				fprintf(stderr, "%c\n", WEXITSTATUS(*status));
+			}
+			free(status);
+	}
+}
+
 
 void jsh_main_loop_run()
 {
@@ -55,12 +95,19 @@ void jsh_main_loop_run()
 	do {
 		line = get_stdin_line();
 		tokens = split_line(line);
-
 		printf("Tokens: ");
 		for (size_t i = 0; tokens[i] != NULL; ++i) {
 			printf("[%s]", tokens[i]);
 		}
 		printf("\n");
+
+		if (tokens[0] != NULL)
+			start_process(tokens);
+		else
+			printf("No args\n");
+
+		free(line);
+		free(tokens);
 		
 	} while (strncmp(line, EXIT_STR, strlen(EXIT_STR)));
 	printf("Exiting...\n");
