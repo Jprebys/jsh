@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdbool.h>
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -79,12 +80,11 @@ void start_process(char **tokens) {
 			} else
 				exit(0);
 		default:    // parent
-			int *status = malloc(sizeof(int));
-			waitpid(pid, status, 0);
-			if (WIFEXITED(*status) && (WEXITSTATUS(*status))) {
-				fprintf(stderr, "%c\n", WEXITSTATUS(*status));
+			int status;
+			waitpid(pid, &status, 0);
+			if (WIFEXITED(status) && (WEXITSTATUS(status))) {
+				fprintf(stderr, "%c\n", WEXITSTATUS(status));
 			}
-			free(status);
 	}
 }
 
@@ -92,16 +92,24 @@ void start_process(char **tokens) {
 void jsh_main_loop_run()
 {
 	char *line, **tokens;
+	bool exit_received = false;
 	do {
 		line = get_stdin_line();
+		if (line == NULL) {
+			free(line);
+			break;
+		}
+		printf("here%s\n", line);		
 		tokens = split_line(line);
 		printf("Tokens: ");
 		for (size_t i = 0; tokens[i] != NULL; ++i) {
 			printf("[%s]", tokens[i]);
 		}
-		printf("\n");
+		printf("%s\n", line);
 
-		if (tokens[0] != NULL)
+		if (!strncmp(line, EXIT_STR, strlen(EXIT_STR)))
+			exit_received = true;
+		else if (tokens[0] != NULL)
 			start_process(tokens);
 		else
 			printf("No args\n");
@@ -109,7 +117,7 @@ void jsh_main_loop_run()
 		free(line);
 		free(tokens);
 		
-	} while (strncmp(line, EXIT_STR, strlen(EXIT_STR)));
+	} while (!exit_received);
 	printf("Exiting...\n");
 }
 
