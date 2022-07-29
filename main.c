@@ -7,25 +7,40 @@
 #include <sys/wait.h>
 
 #define MAX_LINE_LENGTH 256
+#define MAX_DIR_NAME 256
 #define MAX_TOKENS 128
 #define EXIT_STR "exit"
 #define JSH_DELIMITER " "
 #define JSH_PROMPT ">>"
 #define BIN_DIR "/usr/bin"
 #define JOIN_CHAR "/"
-#define JOIN_CHAR_LEN (sizeof(JOIN_CHAR) - 1)
+
+typedef struct {
+	char *cwd;
+	char *uname;
+} jsh_settings;
 
 
-char* join_paths(char* base, char* fname) 
+// char *get_cwd() {
+// 	return _current_dir;
+// }
+
+// void set_cwd() {
+
+// }
+
+
+char* join_strings(char* base, char* fname, char *delim) 
 {
 	size_t base_size = strlen(base);
 	size_t fname_size = strlen(fname);
-	char* begin = malloc(base_size + JOIN_CHAR_LEN + fname_size + 1);
+	size_t delim_size = strlen(delim);
+	char* begin = malloc(base_size + delim_size + fname_size + 1);
 	char* end = begin;
 	memcpy(end, base, base_size);
 	end += base_size;
-	memcpy(end, JOIN_CHAR, JOIN_CHAR_LEN);
-	end += JOIN_CHAR_LEN;
+	memcpy(end, delim, delim_size);
+	end += delim_size;
 	memcpy(end, fname, fname_size);
 	end += fname_size;
 	*end = '\0';
@@ -37,7 +52,8 @@ char* join_paths(char* base, char* fname)
 char *get_stdin_line()
 {
 	char *prompt = JSH_PROMPT;
-	return readline(prompt);
+	char *line = readline(prompt);
+	return line;
 }
 
 char **split_line(char *line)
@@ -71,7 +87,7 @@ void start_process(char **tokens) {
 			perror("Fork");
 			exit(1);
 		case  0:    // child
-			char *f_path = join_paths(BIN_DIR, tokens[0]);
+			char *f_path = join_strings(BIN_DIR, tokens[0], JOIN_CHAR);
 			int result = execve(f_path, tokens, NULL);
 			free(f_path);
 			if (result == -1) {
@@ -99,13 +115,12 @@ void jsh_main_loop_run()
 			free(line);
 			break;
 		}
-		printf("here%s\n", line);		
 		tokens = split_line(line);
 		printf("Tokens: ");
 		for (size_t i = 0; tokens[i] != NULL; ++i) {
 			printf("[%s]", tokens[i]);
 		}
-		printf("%s\n", line);
+		printf("\n");
 
 		if (!strncmp(line, EXIT_STR, strlen(EXIT_STR)))
 			exit_received = true;
@@ -121,15 +136,48 @@ void jsh_main_loop_run()
 	printf("Exiting...\n");
 }
 
+jsh_settings *initialize_settings()
+{
+	jsh_settings *result = malloc(sizeof(jsh_settings));
+	char *cwd = malloc(MAX_DIR_NAME);
+	char *uname = getlogin();
+
+	getcwd(cwd, MAX_DIR_NAME);
+
+	if (cwd == NULL) {
+		perror("getwd");
+		exit(1);
+	} else if (uname == NULL) {
+		perror("getlogin");
+		exit(1);
+	}
+
+	result->cwd = cwd;
+	result->uname = uname;
+
+	return result;
+}
+
+void cleanup_settings(jsh_settings *stgs)
+{
+	free(stgs->cwd);
+	free(stgs);
+}
+
 int main()
 {
 	// TODO: parse command line args
 	// TODO: read config file here
 
+	jsh_settings *stgs = initialize_settings();
+	printf("[%s]%s\n", stgs->uname, stgs->cwd);
+
+
 	// run main shell loop
-	jsh_main_loop_run();
+	jsh_main_loop_run(stgs);
 
 	// TODO: add any cleanup here
+	cleanup_settings(stgs);
 
 	return 0;
 }
