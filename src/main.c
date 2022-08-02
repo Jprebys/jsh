@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
@@ -72,27 +73,39 @@ char **split_line(char *line)
 	return result;
 }
 
-
-void start_process(char **tokens) 
+void run_cd_cmd(char **tokens, jsh_settings *stgs)
 {
+	if (tokens[1] == NULL) {
+		fprintf(stderr, "Run cd with: 'cd <directory>'\n");
+		return;
+	}
+	int result = chdir(tokens[1]);
+	if (result == -1) {
+		fprintf(stderr, "Error: %s\n", strerror(errno));
+		return;
+	}
+	free(stgs->cwd);
+	char *cwd = malloc(MAX_DIR_NAME);
+	getcwd(cwd, MAX_DIR_NAME);
+	stgs->cwd = cwd;
+	return;
+}
+
+
+void start_process(char **tokens, jsh_settings *stgs) 
+{
+	if (strlen(tokens[0]) == CD_CMD_LEN 
+		&& !strncmp(tokens[0], CD_CMD, CD_CMD_LEN)) {
+		run_cd_cmd(tokens, stgs);
+		return;
+	}
+
 	pid_t pid = fork();
 	switch (pid) {
 		case -1:    // error
 			perror("Fork");
 			exit(1);
 		case  0:    // child
-			if (strlen(tokens[0]) == CD_CMD_LEN 
-				&& !strncmp(tokens[0], CD_CMD, CD_CMD_LEN)) {
-				// 'cd command received'
-				if (tokens[1] == NULL) {
-					fprintf(stderr, "Run cd with: 'cd <directory>'\n");
-					exit(0);
-				}
-
-				exit(0);
-			}
-
-
 			char *f_path = join_strings(BIN_DIR, tokens[0], JOIN_CHAR);
 			int result = execve(f_path, tokens, NULL);
 			free(f_path);
@@ -131,7 +144,7 @@ void jsh_main_loop_run(jsh_settings *stgs)
 		if (!strncmp(line, EXIT_STR, strlen(EXIT_STR)))
 			exit_received = true;
 		else if (tokens[0] != NULL)
-			start_process(tokens);
+			start_process(tokens, stgs);
 		else
 			printf("No args\n");
 
