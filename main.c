@@ -21,15 +21,6 @@ typedef struct {
 } jsh_settings;
 
 
-// char *get_cwd() {
-// 	return _current_dir;
-// }
-
-// void set_cwd() {
-
-// }
-
-
 char* join_strings(char* base, char* fname, char *delim) 
 {
 	size_t base_size = strlen(base);
@@ -56,6 +47,7 @@ char *get_stdin_line()
 	return line;
 }
 
+
 char **split_line(char *line)
 {
 	char *token;
@@ -80,7 +72,9 @@ char **split_line(char *line)
 	return result;
 }
 
-void start_process(char **tokens) {
+
+void start_process(char **tokens) 
+{
 	pid_t pid = fork();
 	switch (pid) {
 		case -1:    // error
@@ -136,6 +130,7 @@ void jsh_main_loop_run()
 	printf("Exiting...\n");
 }
 
+
 jsh_settings *initialize_settings()
 {
 	jsh_settings *result = malloc(sizeof(jsh_settings));
@@ -158,11 +153,13 @@ jsh_settings *initialize_settings()
 	return result;
 }
 
+
 void cleanup_settings(jsh_settings *stgs)
 {
 	free(stgs->cwd);
 	free(stgs);
 }
+
 
 int main()
 {
