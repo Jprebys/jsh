@@ -1,4 +1,5 @@
 TARGET = jsh
+SRC_DIR = src
 LIBS = -lreadline
 CC = gcc
 CFLAGS = -g -Wall -Wextra
@@ -8,8 +9,8 @@ CFLAGS = -g -Wall -Wextra
 default: $(TARGET)
 all: default
 
-OBJECTS = $(patsubst %.c, %.o, $(wildcard *.c))
-HEADERS = $(wildcard *.h)
+OBJECTS = $(patsubst %.c, %.o, $(wildcard $(SRC_DIR)/*.c))
+HEADERS = $(wildcard $(SRC_DIR)/*.h)
 
 %.o: %.c $(HEADERS)
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -20,7 +21,7 @@ $(TARGET): $(OBJECTS)
 	$(CC) $(OBJECTS) -Wall $(LIBS) -o $@
 
 clean:
-	-rm -f *.o
+	-rm -f $(SRC_DIR)/*.o
 	-rm -f $(TARGET)
 
 run: $(TARGET)

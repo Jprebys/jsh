@@ -5,15 +5,8 @@
 #include <unistd.h>
 #include <readline/readline.h>
 #include <sys/wait.h>
+#include "constants.h"
 
-#define MAX_LINE_LENGTH 256
-#define MAX_DIR_NAME 256
-#define MAX_TOKENS 128
-#define EXIT_STR "exit"
-#define JSH_DELIMITER " "
-#define JSH_PROMPT ">>"
-#define BIN_DIR "/usr/bin"
-#define JOIN_CHAR "/"
 
 typedef struct {
 	char *cwd;
@@ -40,10 +33,17 @@ char* join_strings(char* base, char* fname, char *delim)
 }
 
 
-char *get_stdin_line()
+char *get_stdin_line(jsh_settings *stgs)
 {
-	char *prompt = JSH_PROMPT;
+	size_t prompt_len = strlen(stgs->uname) 
+					    + strlen(stgs->cwd) 
+					    + JSH_PROMPT_LEN
+					    + 2 + 1;
+	char *prompt = malloc(prompt_len);
+	snprintf(prompt, prompt_len, "[%s]%s%s\n", 
+		     stgs->uname, stgs->cwd, JSH_PROMPT);
 	char *line = readline(prompt);
+	free(prompt);
 	return line;
 }
 
@@ -81,6 +81,18 @@ void start_process(char **tokens)
 			perror("Fork");
 			exit(1);
 		case  0:    // child
+			if (strlen(tokens[0]) == CD_CMD_LEN 
+				&& !strncmp(tokens[0], CD_CMD, CD_CMD_LEN)) {
+				// 'cd command received'
+				if (tokens[1] == NULL) {
+					fprintf(stderr, "Run cd with: 'cd <directory>'\n");
+					exit(0);
+				}
+
+				exit(0);
+			}
+
+
 			char *f_path = join_strings(BIN_DIR, tokens[0], JOIN_CHAR);
 			int result = execve(f_path, tokens, NULL);
 			free(f_path);
@@ -99,12 +111,12 @@ void start_process(char **tokens)
 }
 
 
-void jsh_main_loop_run()
+void jsh_main_loop_run(jsh_settings *stgs)
 {
 	char *line, **tokens;
 	bool exit_received = false;
 	do {
-		line = get_stdin_line();
+		line = get_stdin_line(stgs);
 		if (line == NULL) {
 			free(line);
 			break;
@@ -167,8 +179,6 @@ int main()
 	// TODO: read config file here
 
 	jsh_settings *stgs = initialize_settings();
-	printf("[%s]%s\n", stgs->uname, stgs->cwd);
-
 
 	// run main shell loop
 	jsh_main_loop_run(stgs);
