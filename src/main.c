@@ -7,31 +7,8 @@
 #include <readline/readline.h>
 #include <sys/wait.h>
 #include "constants.h"
-
-
-typedef struct {
-	char *cwd;
-	char *uname;
-} jsh_settings;
-
-
-char* join_strings(char* base, char* fname, char *delim) 
-{
-	size_t base_size = strlen(base);
-	size_t fname_size = strlen(fname);
-	size_t delim_size = strlen(delim);
-	char* begin = malloc(base_size + delim_size + fname_size + 1);
-	char* end = begin;
-	memcpy(end, base, base_size);
-	end += base_size;
-	memcpy(end, delim, delim_size);
-	end += delim_size;
-	memcpy(end, fname, fname_size);
-	end += fname_size;
-	*end = '\0';
-
-	return begin;
-}
+#include "utils.h"
+#include "commands.h"
 
 
 char *get_stdin_line(jsh_settings *stgs)
@@ -73,29 +50,10 @@ char **split_line(char *line)
 	return result;
 }
 
-void run_cd_cmd(char **tokens, jsh_settings *stgs)
-{
-	if (tokens[1] == NULL) {
-		fprintf(stderr, "Run cd with: 'cd <directory>'\n");
-		return;
-	}
-	int result = chdir(tokens[1]);
-	if (result == -1) {
-		fprintf(stderr, "Error: %s\n", strerror(errno));
-		return;
-	}
-	free(stgs->cwd);
-	char *cwd = malloc(MAX_DIR_NAME);
-	getcwd(cwd, MAX_DIR_NAME);
-	stgs->cwd = cwd;
-	return;
-}
-
 
 void start_process(char **tokens, jsh_settings *stgs) 
 {
-	if (strlen(tokens[0]) == CD_CMD_LEN 
-		&& !strncmp(tokens[0], CD_CMD, CD_CMD_LEN)) {
+	if (!strncmp(tokens[0], CD_CMD, CD_CMD_LEN)) {
 		run_cd_cmd(tokens, stgs);
 		return;
 	}
@@ -135,11 +93,6 @@ void jsh_main_loop_run(jsh_settings *stgs)
 			break;
 		}
 		tokens = split_line(line);
-		printf("Tokens: ");
-		for (size_t i = 0; tokens[i] != NULL; ++i) {
-			printf("[%s]", tokens[i]);
-		}
-		printf("\n");
 
 		if (!strncmp(line, EXIT_STR, strlen(EXIT_STR)))
 			exit_received = true;

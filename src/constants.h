@@ -1,3 +1,6 @@
+#ifndef CONSTANTS_H_
+#define CONSTANTS_H_
+
 #define MAX_LINE_LENGTH 256
 #define MAX_DIR_NAME 256
 #define MAX_TOKENS 128
@@ -9,3 +12,5 @@
 #define JOIN_CHAR "/"
 #define CD_CMD "cd"
 #define CD_CMD_LEN strlen(CD_CMD)
+
+#endif
