@@ -57,7 +57,8 @@ void start_process(char **tokens, jsh_settings *stgs)
 		run_cd_cmd(tokens, stgs);
 		return;
 	} else if (!strncmp(tokens[0], CAL_CMD, CAL_CMD_LEN)) {
-		run_cal_cmd();
+		// cal can be invoked with 'cal' or 'cal yyyy-mm-dd'
+		run_cal_cmd(tokens[1]);
 		return;
 	}
 
@@ -146,7 +147,6 @@ int main()
 {
 	// TODO: parse command line args
 	// TODO: read config file here
-
 	jsh_settings *stgs = initialize_settings();
 
 	// run main shell loop

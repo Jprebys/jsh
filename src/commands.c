@@ -4,6 +4,9 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
+
+// #define _XOPEN_SOURCE
+#define __USE_XOPEN 1
 #include <time.h>
 
 #include "commands.h"
@@ -51,7 +54,7 @@ bool is_leap_year(int year)
 }
 
 
-void run_cal_cmd()
+void run_cal_cmd(char *date_str)
 {
 	static const char *months[] = {
 	    "January", "February", "March", "April",
@@ -62,22 +65,34 @@ void run_cal_cmd()
     	31, 28, 31, 30, 31, 30,
         31, 31, 30, 31, 30, 31 
     };
+    static const char* days[] = {
+    	"Su", "M", "T", "W", "Th", "F", "Sa"
+    };
 
-	time_t rawtime = time(NULL);
-	if (rawtime == (time_t) -1) {
-		perror("time");
-		return;
+    struct tm lt;
+    struct tm *local_time = &lt;
+    if (date_str == NULL) {
+		time_t rawtime = time(NULL);
+		if (rawtime == (time_t) -1) {
+			perror("time");
+			return;
+		}
+		local_time = localtime(&rawtime);
+	} else {
+		strptime(date_str, "%F", local_time);
 	}
-	struct tm *local_time = localtime(&rawtime);
-
 	int num_of_days = days_in_month[local_time->tm_mon];
 
 	// determine if leap year, then if Feb, adjust day count
 	if (local_time->tm_mon == 1 && is_leap_year(local_time->tm_year + 1900))
-		num_of_days--;
+		num_of_days++;
 
 
 	printf("\n%18s\n\n", months[local_time->tm_mon]);
+
+	for (size_t i = 0; i < sizeof(days) / sizeof(char*); ++i) 
+		printf("%4s", days[i]);
+	printf("\n\n");
 
 	int month_start_day = day_of_week_number(1, local_time->tm_mon + 1, 
 		                                     local_time->tm_year + 1900);
