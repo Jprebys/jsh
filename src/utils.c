@@ -5,8 +5,6 @@
 #include "constants.h"
 
 
-
-
 char* join_strings(char* base, char* fname, char *delim) 
 {
 	size_t base_size = strlen(base);

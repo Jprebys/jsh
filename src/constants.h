@@ -12,5 +12,7 @@
 #define JOIN_CHAR "/"
 #define CD_CMD "cd"
 #define CD_CMD_LEN strlen(CD_CMD)
+#define CAL_CMD "cal"
+#define CAL_CMD_LEN strlen(CAL_CMD)
 
 #endif

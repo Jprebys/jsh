@@ -56,6 +56,9 @@ void start_process(char **tokens, jsh_settings *stgs)
 	if (!strncmp(tokens[0], CD_CMD, CD_CMD_LEN)) {
 		run_cd_cmd(tokens, stgs);
 		return;
+	} else if (!strncmp(tokens[0], CAL_CMD, CAL_CMD_LEN)) {
+		run_cal_cmd();
+		return;
 	}
 
 	pid_t pid = fork();
