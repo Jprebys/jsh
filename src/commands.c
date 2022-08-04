@@ -79,8 +79,7 @@ void run_cal_cmd()
 
 	printf("\n%18s\n\n", months[local_time->tm_mon]);
 
-	int month_start_day = day_of_week_number(1, 
-		                                     local_time->tm_mon + 1, 
+	int month_start_day = day_of_week_number(1, local_time->tm_mon + 1, 
 		                                     local_time->tm_year + 1900);
 
 	int i = 0;
@@ -89,7 +88,15 @@ void run_cal_cmd()
 	}
 
 	for (int j = 1; j <= num_of_days; ++j) {
-		printf("%4d", j);
+		if (j == local_time->tm_mday) {
+			// Read about ANSI color codes in this SO answer
+			// https://stackoverflow.com/a/2616912/3268228
+			// This will print the number in black with a white background
+			// preceeded by two spaces
+			printf("  \033[30;47m%2d\033[0m", j);
+		} else {
+			printf("%4d", j);
+		}
 		if ((i = (i + 1) % 7) == 0)
 			printf("\n\n");
 	}
