@@ -26,3 +26,9 @@ clean:
 
 run: $(TARGET)
 	./$(TARGET)
+
+install:
+	cp $(TARGET) /usr/local/bin/$(TARGET)
+
+uninstall:
+	rm -f /usr/local/bin/$(TARGET)
