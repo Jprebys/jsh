@@ -11,8 +11,8 @@ Here I will be implementing a shell program in pure C. I am doing this to more f
 
 
 #### Built and tested using:
-Ubuntu 22.04
-GCC 11.2.0
-GNU Make 4.3
-Tilix terminal 1.9.4
+- Ubuntu 22.04
+- GCC 11.2.0
+- GNU Make 4.3
+- Tilix terminal 1.9.4
 
