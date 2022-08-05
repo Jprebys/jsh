@@ -11,7 +11,7 @@
 #include "commands.h"
 
 
-char *get_stdin_line(jsh_settings *stgs)
+char *get_stdin_line2(jsh_settings *stgs)
 {
 	size_t prompt_len = strlen(stgs->uname) 
 					    + strlen(stgs->cwd) 
@@ -22,6 +22,21 @@ char *get_stdin_line(jsh_settings *stgs)
 		     stgs->uname, stgs->cwd, JSH_PROMPT);
 	char *line = readline(prompt);
 	free(prompt);
+	return line;
+}
+
+char *get_stdin_line(jsh_settings *stgs)
+{
+	static const char *fmt_str = "[\33[1;32m%s\33[0m]\33[34;1m%s\33[37;1m%s\33[0m";
+
+	// size_t prompt_len = strlen(stgs->uname) 
+	// 				    + strlen(stgs->cwd) 
+	// 				    + JSH_PROMPT_LEN
+	// 				    + 2 + 1 + 5;
+	char prompt[256];
+	snprintf(prompt, sizeof(prompt), fmt_str, 
+		     stgs->uname, stgs->cwd, JSH_PROMPT);
+	char *line = readline(prompt);
 	return line;
 }
 
@@ -77,11 +92,11 @@ void start_process(char **tokens, jsh_settings *stgs)
 			} else
 				exit(0);
 		default:    // parent
-			int status;
-			waitpid(pid, &status, 0);
-			if (WIFEXITED(status) && (WEXITSTATUS(status))) {
-				fprintf(stderr, "%c\n", WEXITSTATUS(status));
-			}
+			// int status;
+			waitpid(pid, NULL, 0);
+			// if (WIFEXITED(status) && (WEXITSTATUS(status))) {
+				// fprintf(stderr, "Big Loser%c\n", WEXITSTATUS(status));
+			// }
 	}
 }
 
