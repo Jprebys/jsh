@@ -136,33 +136,42 @@ Ball init_ball(int max_y, int max_x)
 	(void) max_y;
 	Ball ball = {
 		.x  = rand() % max_x,
-		.y  = 0,
-		.vx = 0,
+		.vx = rand() % 20,
 		.vy = rand() % 20,
-		.r  = 1
+		.r  = (rand() % 4) + 1
 	};
+	ball.y = ball.r;
 	return ball;
 }
 
 
 void draw_ball(Ball ball, int max_y)
-{
-	mvaddch(max_y - ball.y, ball.x, 'O');
+{	
+	for (int i = -ball.r; i <= ball.r; ++i) {
+		for (int j = -ball.r; j <= ball.r; ++j) {
+			if (i*i + j*j <= ball.r * ball.r + ball.r * 0.8f)
+				mvaddch(max_y - (ball.y + i), ball.x + j, '#');
+		}
+	}
 }
 
 #define GRAVITY 10
 #define FPS 10
 #define ONE_SECOND 1000000
 
-void update_ball(Ball *ball)
+void update_ball(Ball *ball, int max_x)
 {
 	ball->x += ball->vx / FPS;
 	ball->y += ball->vy / FPS;
 
-	if (ball->y <= 0)
+	if (ball->y - ball->r <= 0)
 		ball->vy = -ball->vy;
 	else
 		ball->vy -= GRAVITY / FPS;
+
+	if (ball->x + ball->r >= max_x || ball->x - ball->r <= 0)
+		ball->vx = -ball->vx;
+	
 }
 
 
@@ -203,7 +212,7 @@ void run_movie_cmd(char *token)
 		for (int i = 0; i < n_balls; ++i) {
 			// printw("%d %d %d %d  ", balls[i].x, balls[i].y, balls[i].vx, balls[i].vy);
 			draw_ball(balls[i], max_y);
-			update_ball(&balls[i]);
+			update_ball(&balls[i], cols);
 		}
 
 
