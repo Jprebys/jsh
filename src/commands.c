@@ -124,6 +124,9 @@ void run_cal_cmd(char *date_str)
 
 
 // movie command
+#define GRAVITY 10
+#define FPS 10
+#define ONE_SECOND 1000000
 
 typedef struct Ball {
 	int r;
@@ -155,9 +158,6 @@ void draw_ball(Ball ball, int max_y)
 	}
 }
 
-#define GRAVITY 10
-#define FPS 10
-#define ONE_SECOND 1000000
 
 void update_ball(Ball *ball, int max_x)
 {
@@ -203,18 +203,12 @@ void run_movie_cmd(char *token)
 
 	while (true) {
 		erase();
-		// printw("\n\n    %d %d\n", LINES, COLS);
 		box(stdscr, 0, 0);
 
-		// hline('_', max_y);
-
-
 		for (int i = 0; i < n_balls; ++i) {
-			// printw("%d %d %d %d  ", balls[i].x, balls[i].y, balls[i].vx, balls[i].vy);
 			draw_ball(balls[i], max_y);
 			update_ball(&balls[i], cols);
 		}
-
 
 		refresh();
 
