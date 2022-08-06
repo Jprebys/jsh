@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <readline/readline.h>
 #include <sys/wait.h>
+
 #include "constants.h"
 #include "utils.h"
 #include "commands.h"
@@ -28,11 +29,6 @@ char *get_stdin_line2(jsh_settings *stgs)
 char *get_stdin_line(jsh_settings *stgs)
 {
 	static const char *fmt_str = "[\33[1;32m%s\33[0m]\33[34;1m%s\33[37;1m%s\33[0m";
-
-	// size_t prompt_len = strlen(stgs->uname) 
-	// 				    + strlen(stgs->cwd) 
-	// 				    + JSH_PROMPT_LEN
-	// 				    + 2 + 1 + 5;
 	char prompt[256];
 	snprintf(prompt, sizeof(prompt), fmt_str, 
 		     stgs->uname, stgs->cwd, JSH_PROMPT);
@@ -74,6 +70,10 @@ void start_process(char **tokens, jsh_settings *stgs)
 	} else if (!strncmp(tokens[0], CAL_CMD, CAL_CMD_LEN)) {
 		// cal can be invoked with 'cal' or 'cal yyyy-mm-dd'
 		run_cal_cmd(tokens[1]);
+		return;
+	} else if (!strncmp(tokens[0], MOVIE_CMD, MOVIE_CMD_LEN)) {
+		// call with 'movie' or 'movie n' where n is num of balls
+		run_movie_cmd(tokens[1]);
 		return;
 	}
 
@@ -160,6 +160,7 @@ void cleanup_settings(jsh_settings *stgs)
 
 int main()
 {
+
 	// TODO: parse command line args
 	// TODO: read config file here
 	jsh_settings *stgs = initialize_settings();

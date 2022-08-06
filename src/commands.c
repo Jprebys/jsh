@@ -4,8 +4,8 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
+#include <ncurses.h>
 
-// #define _XOPEN_SOURCE
 #define __USE_XOPEN 1
 #include <time.h>
 
@@ -13,6 +13,8 @@
 #include "constants.h"
 #include "utils.h"
 
+
+// cd command
 
 void run_cd_cmd(char **tokens, jsh_settings *stgs)
 {
@@ -32,6 +34,8 @@ void run_cd_cmd(char **tokens, jsh_settings *stgs)
 	return;
 }
 
+
+// cal command
 
 int day_of_week_number(int d, int m, int y)
 {
@@ -116,4 +120,105 @@ void run_cal_cmd(char *date_str)
 			printf("\n\n");
 	}
 	printf("\n\n");
+}
+
+
+// movie command
+
+typedef struct Ball {
+	int r;
+	double x, y, vx, vy;
+} Ball;
+
+
+Ball init_ball(int max_y, int max_x) 
+{
+	(void) max_y;
+	Ball ball = {
+		.x  = rand() % max_x,
+		.y  = 0,
+		.vx = 0,
+		.vy = rand() % 20,
+		.r  = 1
+	};
+	return ball;
+}
+
+
+void draw_ball(Ball ball, int max_y)
+{
+	mvaddch(max_y - ball.y, ball.x, 'O');
+}
+
+#define GRAVITY 10
+#define FPS 10
+#define ONE_SECOND 1000000
+
+void update_ball(Ball *ball)
+{
+	ball->x += ball->vx / FPS;
+	ball->y += ball->vy / FPS;
+
+	if (ball->y <= 0)
+		ball->vy = -ball->vy;
+	else
+		ball->vy -= GRAVITY / FPS;
+}
+
+
+void run_movie_cmd(char *token)
+{
+	int rows, cols, n_balls;
+
+	// seed RNG
+	time_t t;
+	srand((unsigned) time(&t));
+
+	if (token == NULL)
+		n_balls = (rand() % 8) + 2; // 2-10 balls
+	else 
+		n_balls = atoi(token);
+
+	Ball balls[n_balls];
+
+	WINDOW *stdscr = initscr();
+	timeout(0);
+	curs_set(0);
+	getmaxyx(stdscr, rows, cols);
+
+	int max_y = rows - 2;
+
+	for (int i = 0; i < n_balls; ++i) 
+		balls[i] = init_ball(rows, cols);
+	
+
+	while (true) {
+		erase();
+		// printw("\n\n    %d %d\n", LINES, COLS);
+		box(stdscr, 0, 0);
+
+		// hline('_', max_y);
+
+
+		for (int i = 0; i < n_balls; ++i) {
+			// printw("%d %d %d %d  ", balls[i].x, balls[i].y, balls[i].vx, balls[i].vy);
+			draw_ball(balls[i], max_y);
+			update_ball(&balls[i]);
+		}
+
+
+		refresh();
+
+		if (getch() == ERR)
+			usleep(ONE_SECOND / FPS);
+		else
+			break;
+	}
+
+
+	getch();
+
+
+
+	endwin();	
 }

@@ -14,5 +14,7 @@
 #define CD_CMD_LEN strlen(CD_CMD)
 #define CAL_CMD "cal"
 #define CAL_CMD_LEN strlen(CAL_CMD)
+#define MOVIE_CMD "movie"
+#define MOVIE_CMD_LEN strlen(MOVIE_CMD)
 
 #endif

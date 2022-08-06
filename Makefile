@@ -1,6 +1,6 @@
 TARGET = jsh
 SRC_DIR = src
-LIBS = -lreadline
+LIBS = -lreadline -lncurses
 CC = gcc
 CFLAGS = -g -Wall -Wextra
 
