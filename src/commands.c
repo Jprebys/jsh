@@ -220,8 +220,146 @@ void run_movie_cmd(char *token)
 
 
 	getch();
-
-
-
 	endwin();	
+}
+
+#define BORDER_WIDTH 3
+#define BOARD_CHAR ' '
+#define SLEEP_TIME_US 300000
+
+void draw_board(bool *board, int rows, int cols, WINDOW *win)
+{
+	wattron(win, COLOR_PAIR(1));
+	for (int y = 0; y < rows; ++y) {
+		for (int x = 0; x < cols; ++x) {
+			if (board[y*cols + x])
+				mvwaddch(win, y, x, BOARD_CHAR);
+		}
+	}
+	wattron(win, COLOR_PAIR(0));
+}
+
+void update_board(bool *board, bool *new_board, int rows, int cols) 
+{
+	int adj, cur_idx;
+	for (int y = 0; y < rows; ++y) {
+		for (int x = 0; x < cols; ++x) {
+			cur_idx = y*cols + x;
+
+			// count adjacent live cells
+			adj = 0;
+			if (y > 0) {
+				adj += board[cur_idx - cols];          // up
+				if (x > 0)
+					adj += board[cur_idx - cols - 1];  // up left
+				if (x < cols - 1)
+					adj += board[cur_idx - cols + 1];  // up right
+			}
+			if (y < rows - 1) {
+				adj += board[cur_idx + cols];          // down
+				if (x > 0)
+					adj += board[cur_idx + cols - 1];  // down left
+				if (x < cols - 1)
+					adj += board[cur_idx + cols + 1];  // down right
+			}
+			if (x > 0)
+				adj += board[cur_idx - 1];             // left
+			if (x < cols - 1)
+				adj += board[cur_idx + 1];             // right
+
+
+			// determine if current cell lives or dies
+			if (board[cur_idx] && (adj == 2 || adj == 3))
+				new_board[cur_idx] = true;
+			else if (!board[cur_idx] && adj == 3)
+				new_board[cur_idx] =  true;
+			else
+				new_board[cur_idx] = false;
+		}
+	}
+}
+
+void run_draw_cmd()
+{
+	int outer_rows, outer_cols, rows, cols, x, y;
+
+	WINDOW *stdscr = initscr();
+	noecho();
+	cbreak();
+	curs_set(0);
+
+	start_color();
+	init_pair(1, COLOR_WHITE, COLOR_WHITE);
+
+	getmaxyx(stdscr, outer_rows, outer_cols);
+
+	cols = outer_cols - BORDER_WIDTH*2;
+	rows = outer_rows - BORDER_WIDTH*2;
+	WINDOW *border_scr = newwin(rows+2, cols+2, BORDER_WIDTH-1, BORDER_WIDTH-1);
+	WINDOW *inner_scr = newwin(rows, cols, BORDER_WIDTH, BORDER_WIDTH);
+
+	int board_len = rows * cols;
+	bool board[board_len]; 
+	memset(board, false, board_len * sizeof(bool));
+	// memset(board + 500, true, board_len * sizeof(bool) - 500);
+
+	mvprintw(BORDER_WIDTH-2, BORDER_WIDTH, "Draw here with mouse, press enter to start Conway's Game of Life:");
+	box(border_scr, 0, 0);
+
+	refresh();
+	wrefresh(inner_scr);
+	wrefresh(border_scr);
+
+	MEVENT mevent;
+	mousemask(BUTTON1_PRESSED, NULL);
+	keypad(stdscr, TRUE);
+	keypad(inner_scr, TRUE);
+
+	while (1) {
+		wclear(inner_scr);
+		draw_board(board, rows, cols, inner_scr);
+		refresh();
+		wrefresh(inner_scr);
+
+		switch (wgetch(inner_scr)) {
+			case KEY_MOUSE:
+				if (getmouse(&mevent) == OK) {
+					x = mevent.x - BORDER_WIDTH;
+					y = mevent.y - BORDER_WIDTH;
+					board[y*cols + x] = board[y*cols + x] ? false : true;
+				} else {
+					perror("getmouse");
+					goto end;
+				}
+				break;
+
+			case KEY_ENTER:
+			case '\n':
+				goto start_game;
+
+			case 'q':
+				goto end;
+		} 
+	}
+
+start_game:
+	int c;
+	bool *new_board = malloc(board_len * sizeof(bool));
+
+	// no blocking getch
+	timeout(0); 
+
+	while (getch() != '\n') {
+		update_board(board, new_board, rows, cols);
+		wclear(inner_scr);
+		draw_board(new_board, rows, cols, inner_scr);
+		wrefresh(inner_scr);
+		usleep(SLEEP_TIME_US);
+		memcpy(&board, new_board, sizeof(board));
+	}
+	free(new_board);
+
+end:
+	delwin(inner_scr);
+	endwin();
 }

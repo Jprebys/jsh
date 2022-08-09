@@ -12,6 +12,8 @@ void run_cd_cmd(char **tokens, jsh_settings *stgs);
 
 void run_cal_cmd(char *date_str);
 
-void run_movie_cmd();
+void run_movie_cmd(char *token);
+
+void run_draw_cmd(void);
 
 #endif

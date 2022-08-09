@@ -75,6 +75,9 @@ void start_process(char **tokens, jsh_settings *stgs)
 		// call with 'movie' or 'movie n' where n is num of balls
 		run_movie_cmd(tokens[1]);
 		return;
+	} else if (!strncmp(tokens[0], LIFE_CMD, LIFE_CMD_LEN)) {
+		run_draw_cmd();
+		return;
 	}
 
 	pid_t pid = fork();
@@ -160,7 +163,6 @@ void cleanup_settings(jsh_settings *stgs)
 
 int main()
 {
-
 	// TODO: parse command line args
 	// TODO: read config file here
 	jsh_settings *stgs = initialize_settings();

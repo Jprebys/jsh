@@ -16,5 +16,7 @@
 #define CAL_CMD_LEN strlen(CAL_CMD)
 #define MOVIE_CMD "movie"
 #define MOVIE_CMD_LEN strlen(MOVIE_CMD)
+#define LIFE_CMD "life"
+#define LIFE_CMD_LEN strlen(LIFE_CMD)
 
 #endif
